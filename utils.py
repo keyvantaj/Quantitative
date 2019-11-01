@@ -1,4 +1,3 @@
-    
 from ibapi.client import EClient
 from ibapi.wrapper import EWrapper
 from ibapi.contract import Contract
@@ -14,6 +13,10 @@ from datetime import datetime
 from time import sleep, strftime, localtime 
 from socket import error as SocketError
 import errno
+
+# Read Data
+#########################################################
+#########################################################
 
 def read_ohlcv(reqId, symbol, sec_type, exch, prim_exch, curr, durationStr, barSizeSetting):
 
@@ -35,7 +38,7 @@ def read_ohlcv(reqId, symbol, sec_type, exch, prim_exch, curr, durationStr, barS
         def error(self, reqId:TickerId, errorCode:int, errorString:str):
             if reqId > -1:
                 print("Error. Id: " , reqId, " Code: " , errorCode , " Msg: " , errorString)
-
+            
         def historicalData(self,reqId, bar):
 
             self.historicaldata.index.name = 'Date'
@@ -45,6 +48,7 @@ def read_ohlcv(reqId, symbol, sec_type, exch, prim_exch, curr, durationStr, barS
             super().historicalDataEnd(reqId, start, end)
             print("HistoricalDataEnd. ReqId:", reqId, "from", start, "to", end)
             self.disconnect()
+           
         
     app = TestApp()
     app.connect('127.0.0.1', 7497, 0)
@@ -63,8 +67,8 @@ def read_ohlcv(reqId, symbol, sec_type, exch, prim_exch, curr, durationStr, barS
     ohlcv = app.historicaldata
     app.run()
     sleep(5)
-        
-    return ohlcv 
+    
+    return ohlcv
 
 
 def read_scanner(reqId, numberOfRows, instrument, locationCode, abovePrice,
@@ -130,8 +134,6 @@ def read_fundamental(reqId, symbol, sec_type, exch, prim_exch, curr,reportType):
     contract.exchange = exch
     contract.currency = curr
     contract.primaryExchange = prim_exch
-
-
     
     class TestApp(EWrapper, EClient):
 
@@ -217,8 +219,7 @@ def parse_resc(parser):
     return resc, resc_ann, resc_q
 
 def parse_reportsnapshot(parser):
-    
-    
+        
     business_summary = parser.findAll('text')[0].text
     brief = parser.findAll('text')[1].text
     
@@ -360,6 +361,7 @@ def parse_reportsfinstatements(parser):
                 
     return quarter, annual
 
+# DataFrame
 #########################################################
 #########################################################   
 
@@ -369,6 +371,9 @@ def create_info_dataframe(universe, historical_data):
     exchange = pd.DataFrame(index = historical_data.index , columns = universe)
     name = pd.DataFrame(index = historical_data.index , columns = universe)
     indx = pd.DataFrame(index = historical_data.index , columns = universe)
+    desc = pd.DataFrame(index = historical_data.index , columns = universe)
+    comptype =  pd.DataFrame(index = historical_data.index , columns = universe)
+    bs = {}
     
     for i,tick in enumerate(universe):
      
@@ -390,79 +395,163 @@ def create_info_dataframe(universe, historical_data):
 
         resc, resc_ann, resc_q = parse_resc(parser = RESC)
         snap, estimate, brief, business_summary, address = parse_reportsnapshot(parser = reportsnapshot)
-
+        bs[tick] = [business_summary,address,brief]
+        
         for date in historical_data.index:
 
             try:
                 sector.loc[date,tick] = resc['Sector'][0]
-                exchange.loc[date,tick] = resc['Exchange'][0]
-                name.loc[date,tick] = resc.index[0]
-                indx.loc[date,tick] = snap['Index'][0]
-
             except:
                 sector.loc[date,tick] = np.nan
+            try:
+                exchange.loc[date,tick] = resc['Exchange'][0]
+            except:
                 exchange.loc[date,tick] = np.nan
+            try:
+                name.loc[date,tick] = resc.index[0]
+            except:
                 name.loc[date,tick] = np.nan
-                indx.loc[date,tick] = np.nan
+            try:
+                indx.loc[date,tick] = snap['Index'][0]
+            except:
+                indx.loc[date,tick] = np.nan 
+            try:
+                desc.loc[date,tick] = snap['Desc'][0]
+            except:
+                desc.loc[date,tick] = np.nan 
+            try:
+                comptype.loc[date,tick] = snap['Company Type'][0]
+            except:
+                comptype.loc[date,tick] = np.nan
     
-    return sector, exchange, name, indx
+    return sector, exchange, name, indx, bs, desc, comptype
 
-def create_factor_dataframe(universe, historical_data, factor):
+def create_factor_dataframe(universe, historical_data, factors):
     
-    df = pd.DataFrame(index = historical_data.index,data = [], columns = universe)
+    result = {}
     
-    for i,tick in enumerate(universe):
+    for factor in factors:
 
-        reportsfinstatements = read_fundamental(reqId = i,
+        df = pd.DataFrame(index = historical_data.index,data = [], columns = universe)
+        
+        for i,tick in enumerate(universe):
+            
+            reportsfinstatements = read_fundamental(reqId = i,
                                  symbol = tick, 
                                  sec_type = 'STK', 
                                  exch = 'SMART', 
                                  prim_exch = 'NASDAQ', 
                                  curr = 'USD',
                                  reportType = 'ReportsFinStatements')
-        
-        quarter, annual = parse_reportsfinstatements(parser = reportsfinstatements)
-        
-        
-        for date in historical_data.index:
+
+            quarter, annual = parse_reportsfinstatements(parser = reportsfinstatements)
             
-            try:
-                
-                if int(datetime.strptime(str(date), "%Y%m%d").timestamp()) >= int(datetime.strptime(str(quarter.index[0]), '%Y-%m-%d').timestamp()):
-                    try:
-                        df.loc[date,tick] = quarter.loc[quarter.index[0],factor]
-                    except:
-                        df.loc[date,tick] = np.nan                
+            for date in historical_data.index:
 
-                elif int(datetime.strptime(str(date), "%Y%m%d").timestamp()) < int(datetime.strptime(str(quarter.index[0]), '%Y-%m-%d').timestamp()) and int(datetime.strptime(str(date), "%Y%m%d").timestamp()) >= int(datetime.strptime(str(quarter.index[1]), '%Y-%m-%d').timestamp()):
-                    try:
-                        df.loc[date,tick] = quarter.loc[quarter.index[1],factor]
-                    except:
-                        df.loc[date,tick] = np.nan 
+                try:
 
-                elif int(datetime.strptime(str(date), "%Y%m%d").timestamp()) < int(datetime.strptime(str(quarter.index[1]), '%Y-%m-%d').timestamp()) and int(datetime.strptime(str(date), "%Y%m%d").timestamp()) >= int(datetime.strptime(str(quarter.index[2]), '%Y-%m-%d').timestamp()):
-                    try:
-                        df.loc[date,tick] = quarter.loc[quarter.index[2],factor]
-                    except:
-                        df.loc[date,tick] = np.nan            
+                    if int(datetime.strptime(str(date), "%Y%m%d").timestamp()) >= int(datetime.strptime(str(quarter.index[0]), '%Y-%m-%d').timestamp()):
+                        try:
+                            df.loc[date,tick] = quarter.loc[quarter.index[0],factor]
+                        except:
+                            df.loc[date,tick] = np.nan                
 
+                    elif int(datetime.strptime(str(date), "%Y%m%d").timestamp()) < int(datetime.strptime(str(quarter.index[0]), '%Y-%m-%d').timestamp()) and int(datetime.strptime(str(date), "%Y%m%d").timestamp()) >= int(datetime.strptime(str(quarter.index[1]), '%Y-%m-%d').timestamp()):
+                        try:
+                            df.loc[date,tick] = quarter.loc[quarter.index[1],factor]
+                        except:
+                            df.loc[date,tick] = np.nan 
 
-                elif int(datetime.strptime(str(date), "%Y%m%d").timestamp()) < int(datetime.strptime(str(quarter.index[2]), '%Y-%m-%d').timestamp()) and int(datetime.strptime(str(date), "%Y%m%d").timestamp()) >= int(datetime.strptime(str(quarter.index[3]), '%Y-%m-%d').timestamp()):
-                    try:
-                        df.loc[date,tick] = quarter.loc[quarter.index[3],factor]
-                    except:
-                        df.loc[date,tick] = np.nan 
+                    elif int(datetime.strptime(str(date), "%Y%m%d").timestamp()) < int(datetime.strptime(str(quarter.index[1]), '%Y-%m-%d').timestamp()) and int(datetime.strptime(str(date), "%Y%m%d").timestamp()) >= int(datetime.strptime(str(quarter.index[2]), '%Y-%m-%d').timestamp()):
+                        try:
+                            df.loc[date,tick] = quarter.loc[quarter.index[2],factor]
+                        except:
+                            df.loc[date,tick] = np.nan            
 
 
-                elif int(datetime.strptime(str(date), "%Y%m%d").timestamp()) < int(datetime.strptime(str(quarter.index[3]), '%Y-%m-%d').timestamp()) and int(datetime.strptime(str(date), "%Y%m%d").timestamp()) >= int(datetime.strptime(str(quarter.index[4]), '%Y-%m-%d').timestamp()):
-                    try:
-                        df.loc[date,tick] = quarter.loc[quarter.index[4],factor]
-                    except:
-                        df.loc[date,tick] = np.nan    
+                    elif int(datetime.strptime(str(date), "%Y%m%d").timestamp()) < int(datetime.strptime(str(quarter.index[2]), '%Y-%m-%d').timestamp()) and int(datetime.strptime(str(date), "%Y%m%d").timestamp()) >= int(datetime.strptime(str(quarter.index[3]), '%Y-%m-%d').timestamp()):
+                        try:
+                            df.loc[date,tick] = quarter.loc[quarter.index[3],factor]
+                        except:
+                            df.loc[date,tick] = np.nan 
 
-            except:
-                df.loc[date,tick] = np.nan
-    return df  
+
+                    elif int(datetime.strptime(str(date), "%Y%m%d").timestamp()) < int(datetime.strptime(str(quarter.index[3]), '%Y-%m-%d').timestamp()) and int(datetime.strptime(str(date), "%Y%m%d").timestamp()) >= int(datetime.strptime(str(quarter.index[4]), '%Y-%m-%d').timestamp()):
+                        try:
+                            df.loc[date,tick] = quarter.loc[quarter.index[4],factor]
+                        except:
+                            df.loc[date,tick] = np.nan    
+                except:
+                    df.loc[date,tick] = np.nan
+            
+        result[factor] = df
+    return result
+
+def create_technical_dataframe(universe, historical_data):
+    
+    close = pd.DataFrame(index = historical_data.index , columns = universe)
+    openn = pd.DataFrame(index = historical_data.index , columns = universe)
+    high = pd.DataFrame(index = historical_data.index , columns = universe)
+    low = pd.DataFrame(index = historical_data.index , columns = universe)
+    volume = pd.DataFrame(index = historical_data.index , columns = universe)
+    
+    for tick in universe:
+        
+        ohlcv = read_ohlcv(reqId = 0,
+                             symbol = tick, 
+                             sec_type = 'STK', 
+                             exch = 'SMART', 
+                             prim_exch = 'NASDAQ', 
+                             curr = 'USD',
+                             durationStr = '1 Y',
+                             barSizeSetting = '1 day')
+        
+        close[tick] = ohlcv['Close']
+        openn[tick] = ohlcv['Open']
+        low[tick] = ohlcv['Low']
+        high[tick] = ohlcv['High']
+        volume[tick] = ohlcv['Volume']
+        
+    return openn, high, low, close, volume
+        
+        
+        
+
+def create_multiindex_factor_dataframe(universe, historical_data, factors):
+    
+    result = []
+    result_dict = create_factor_dataframe(universe, historical_data, factors)
+    sector, exchange, name, indx, bs, desc, comptype = create_info_dataframe(universe, historical_data)
+    openn, high, low, close, volume = create_technical_dataframe(universe, historical_data)
+    
+    for factor in factors:
+
+        df = result_dict[factor].stack().to_frame(factor)
+        result.append(df)
+    
+    sector = sector.stack().to_frame('Sector')
+    exchange = exchange.stack().to_frame('Exchange')
+    name = name.stack().to_frame('Name')
+    comptype = comptype.stack().to_frame('Company Type')
+    desc = desc.stack().to_frame('Desc') 
+    indx = indx.stack().to_frame('Index')
+    volume = volume.stack().to_frame('Volume')
+    close = close.stack().to_frame('Close')
+    
+    result.append(close)
+    result.append(volume)
+    result.append(sector)
+    result.append(exchange)
+    result.append(name)
+    result.append(indx)
+    result.append(desc)
+    result.append(comptype)
+     
+    final = pd.concat(result,axis=1)
+    final.index.levels[1].name = 'Symbol'    
+    
+    return final,bs
+
 
 def demean(df):
     
@@ -478,5 +567,114 @@ def zscore(df):
     for date in df.index:
         for tick in df.columns:
             df_zscore.loc[date,tick] = (df.loc[date,tick] - df.loc[date,:].mean())/df.loc[date,:].std(ddof=0)
-    return df_zscore    
+    return df_zscore   
+
+
+#ORDERS
+#########################################################
+#########################################################   
+
+def read_nextvalidid(reqId):
+
+    class TestApp(EWrapper, EClient):
+
+        def __init__(self):
+            EClient.__init__(self,self)
+
+            self.nextValidOrderId = []
+            
+
+        def error(self, reqId:TickerId, errorCode:int, errorString:str):
+            if reqId > -1:
+                print("Error. Id: " , reqId, " Code: " , errorCode , " Msg: " , errorString)
+            
+        def nextValidId(self,orderId):
+            super().nextValidId(orderId)
+            self.nextValidOrderId.append(orderId)
+            print("NextValidId:", orderId)
+            self.disconnect()
+           
+    app = TestApp()
+    app.connect('127.0.0.1', 7497, 0)
+    
+    app.reqIds(-1)
+    nid = app.nextValidOrderId
+        
+    app.run()
+    sleep(5)
+    
+    return nid[0]
+
+def placing_orders(orderId, reqId, symbol, sec_type, exch, prim_exch, curr, order_type, quantity, action):
+    
+    contract = Contract()
+    contract.symbol = symbol
+    contract.secType = sec_type
+    contract.exchange = exch
+    contract.primaryExchange = prim_exch
+    contract.currency = curr
+    
+    order = Order()
+    order.orderType = order_type
+    order.totalQuantity = quantity
+    order.action = action
+
+    class TestApp(EWrapper, EClient):
+
+        def __init__(self):
+            EClient.__init__(self,self)
+
+        def error(self, reqId:TickerId, errorCode:int, errorString:str):
+            if reqId > -1:
+                print("Error. Id: " , reqId, " Code: " , errorCode , " Msg: " , errorString)
+
+               
+    app = TestApp()
+    app.connect('127.0.0.1', 7497, 0)
+    
+    app.placeOrder(orderId = orderId, contract = contract, order = order)
+    sleep(5)
+    
+    return order, contract
+
+    app.disconnect()
+    app.run()
+
+
+def read_positions(subscribe, acctCode):
+    
+    class TestApp(EWrapper, EClient):
+
+
+        def __init__(self):
+            EClient.__init__(self,self)
+            self.up = pd.DataFrame([], columns = ['Position', 'marketPrice', 'marketValue', 'averageCost', 'unrealizedPNL', 'realizedPNL'])
+            
+            
+        def error(self, reqId:TickerId, errorCode:int, errorString:str):
+            if reqId > -1:
+                print("Error. Id: " , reqId, " Code: " , errorCode , " Msg: " , errorString)
+            
+        def updatePortfolio (self, contract, position, marketPrice, marketValue, averageCost, unrealizedPNL, realizedPNL, accountName):
+            self.up.index.name = 'Symbol'            
+            self.up.loc[contract.symbol] = position, marketPrice, marketValue, averageCost, unrealizedPNL, realizedPNL
+                        
+        def positionEnd(self):
+            super().positionEnd()
+            print("PositionEnd")
+            self.disconnect()
+
+            
+    app = TestApp()
+    app.connect('127.0.0.1', 7497, 0)
+    
+    app.reqAccountUpdates(subscribe = subscribe,acctCode = acctCode)
+    app.reqPositions()
+    
+    update = app.up
+    
+    app.run()
+    
+    sleep(5)
+    return update
     

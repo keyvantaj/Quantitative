@@ -6,13 +6,15 @@ from ibapi.scanner import ScannerSubscription
 from ibapi.ticktype import TickTypeEnum
 from ibapi.common import * #for TickerId type
 
+import matplotlib.pyplot as plt
+import seaborn as sns
 import pandas as pd
 import numpy as np
 from bs4 import BeautifulSoup
 from datetime import datetime
-from time import sleep, strftime, localtime 
-from socket import error as SocketError
-import errno
+from time import sleep, strftime, localtime,time 
+
+sleeptime = 3
 
 # Read Data
 #########################################################
@@ -48,7 +50,8 @@ def read_ohlcv(reqId, symbol, sec_type, exch, prim_exch, curr, durationStr, barS
             super().historicalDataEnd(reqId, start, end)
             print("HistoricalDataEnd. ReqId:", reqId, "from", start, "to", end)
             self.disconnect()
-           
+            
+
         
     app = TestApp()
     app.connect('127.0.0.1', 7497, 0)
@@ -66,7 +69,8 @@ def read_ohlcv(reqId, symbol, sec_type, exch, prim_exch, curr, durationStr, barS
         
     ohlcv = app.historicaldata
     app.run()
-    sleep(5)
+    print ('Creating OHLCV dataframe ...')
+    sleep(sleeptime)
     
     return ohlcv
 
@@ -110,7 +114,6 @@ def read_scanner(reqId, numberOfRows, instrument, locationCode, abovePrice,
             print("ScannerDataEnd. ReqId:", reqId)
             self.disconnect()
 
-        
     app = TestApp()
     app.connect('127.0.0.1', 7497, 0)      
 
@@ -119,9 +122,9 @@ def read_scanner(reqId, numberOfRows, instrument, locationCode, abovePrice,
                           scannerSubscriptionFilterOptions = [])
 
     scanner = app.scannerdata
-
+    
     app.run()
-    sleep(5)
+    sleep(sleeptime)
         
     return scanner
 
@@ -148,14 +151,13 @@ def read_fundamental(reqId, symbol, sec_type, exch, prim_exch, curr,reportType):
         
         def fundamentalData(self, reqId: TickerId, data: str):
             super().fundamentalData(reqId, data)
-            
+            print ('Reading XML data ...')
             parser = BeautifulSoup(data, 'lxml')
             self.fund.append(parser)
             self.disconnect()
-  
+
     app = TestApp()
     app.connect('127.0.0.1', 7497, 0)      
-
     app.reqFundamentalData(reqId = reqId,
                            contract = contract, 
                            reportType = reportType, 
@@ -163,13 +165,14 @@ def read_fundamental(reqId, symbol, sec_type, exch, prim_exch, curr,reportType):
 
     fund = app.fund
     app.run()
-    sleep(5)
+    sleep(sleeptime)
     return fund[0]
 
 
 
 def parse_resc(parser):
     
+    print ('Parsing resc data started ...')
     resc = pd.DataFrame(index = [parser.find('name').text],
                         columns = ['Exchange', 'Symbol', 'Sector', 'CLPRICE', 'SHARESOUT',
                                    'MARKETCAP', '52WKHIGH', '52WKLOW'])
@@ -219,7 +222,8 @@ def parse_resc(parser):
     return resc, resc_ann, resc_q
 
 def parse_reportsnapshot(parser):
-        
+
+    print ('Parsing reportsnapshot data started...')
     business_summary = parser.findAll('text')[0].text
     brief = parser.findAll('text')[1].text
     
@@ -284,6 +288,8 @@ def parse_reportsnapshot(parser):
     return snap, estimate, brief, business_summary, address
     
 def parse_reportsfinsummary(parser):
+        
+    print ('Parsing reportsfinsummary data started...')
     
     date_div = [];data_div = []
     
@@ -319,7 +325,8 @@ def parse_reportsfinsummary(parser):
     return fin
 
 def parse_reportsfinstatements(parser):
-   
+    
+    print ('Parsing reportsfinstatements data started...')
     mapp = dict()
     for item in parser.findAll('mapitem'):
         mapp[item['coaitem']] = item.text
@@ -366,6 +373,8 @@ def parse_reportsfinstatements(parser):
 #########################################################   
 
 def create_info_dataframe(universe, historical_data):
+    
+    print ('Creating historical information dataframe...')
     
     sector = pd.DataFrame(index = historical_data.index , columns = universe)
     exchange = pd.DataFrame(index = historical_data.index , columns = universe)
@@ -435,6 +444,7 @@ def create_factor_dataframe(universe, historical_data, factors):
         df = pd.DataFrame(index = historical_data.index,data = [], columns = universe)
         
         for i,tick in enumerate(universe):
+            print ('Creating {} dataframe for {}'.format(factor,tick))
             
             reportsfinstatements = read_fundamental(reqId = i,
                                  symbol = tick, 
@@ -487,7 +497,8 @@ def create_factor_dataframe(universe, historical_data, factors):
         result[factor] = df
     return result
 
-def create_technical_dataframe(universe, historical_data):
+def create_technical_dataframe(universe, historical_data, duration):
+    print ('Creating historical technical dataframe...')
     
     close = pd.DataFrame(index = historical_data.index , columns = universe)
     openn = pd.DataFrame(index = historical_data.index , columns = universe)
@@ -496,14 +507,14 @@ def create_technical_dataframe(universe, historical_data):
     volume = pd.DataFrame(index = historical_data.index , columns = universe)
     
     for tick in universe:
-        
+        print ('{}'.format(tick))
         ohlcv = read_ohlcv(reqId = 0,
                              symbol = tick, 
                              sec_type = 'STK', 
                              exch = 'SMART', 
                              prim_exch = 'NASDAQ', 
                              curr = 'USD',
-                             durationStr = '1 Y',
+                             durationStr = duration,
                              barSizeSetting = '1 day')
         
         close[tick] = ohlcv['Close']
@@ -519,6 +530,8 @@ def create_technical_dataframe(universe, historical_data):
 
 def create_multiindex_factor_dataframe(universe, historical_data, factors):
     
+    start_time = time()
+    print ('Fetching data into multiindex dataframe...')
     result = []
     result_dict = create_factor_dataframe(universe, historical_data, factors)
     sector, exchange, name, indx, bs, desc, comptype = create_info_dataframe(universe, historical_data)
@@ -549,25 +562,9 @@ def create_multiindex_factor_dataframe(universe, historical_data, factors):
      
     final = pd.concat(result,axis=1)
     final.index.levels[1].name = 'Symbol'    
+    print("--- %s seconds ---" % (time() - start_time))
     
-    return final,bs
-
-
-def demean(df):
-    
-    df_demean = pd.DataFrame()
-    for date in df.index:
-        for tick in df.columns:
-            df_demean.loc[date,tick] = df.loc[date,tick] - df.loc[date,:].mean()
-    return df_demean
-
-def zscore(df):
-    
-    df_zscore = pd.DataFrame()
-    for date in df.index:
-        for tick in df.columns:
-            df_zscore.loc[date,tick] = (df.loc[date,tick] - df.loc[date,:].mean())/df.loc[date,:].std(ddof=0)
-    return df_zscore   
+    return final,bs  
 
 
 #ORDERS
@@ -601,11 +598,11 @@ def read_nextvalidid(reqId):
     nid = app.nextValidOrderId
         
     app.run()
-    sleep(5)
+    sleep(sleeptime)
     
     return nid[0]
 
-def placing_orders(orderId, reqId, symbol, sec_type, exch, prim_exch, curr, order_type, quantity, action):
+def placing_orders(orderId, reqId, symbol, sec_type, exch, prim_exch, curr, order_type, quantity, action, positions):
     
     contract = Contract()
     contract.symbol = symbol
@@ -628,12 +625,20 @@ def placing_orders(orderId, reqId, symbol, sec_type, exch, prim_exch, curr, orde
             if reqId > -1:
                 print("Error. Id: " , reqId, " Code: " , errorCode , " Msg: " , errorString)
 
-               
     app = TestApp()
     app.connect('127.0.0.1', 7497, 0)
-    
-    app.placeOrder(orderId = orderId, contract = contract, order = order)
-    sleep(5)
+
+    if contract.symbol in positions.index:
+        order.totalQuantity = int(order.totalQuantity) - int(positions.loc[contract.symbol,'Position'])
+        app.placeOrder(orderId = orderId, contract = contract, order = order)
+        print ('{} positions of {} already in portfolio '.format(positions.loc[contract.symbol,'Position'],contract.symbol))
+        print ('New order quantity placed is: {}'.format(order.totalQuantity))
+        
+    else:
+        app.placeOrder(orderId = orderId, contract = contract, order = order)
+        print ('order quantity placed for {} is: {} '.format(contract.symbol, order.totalQuantity))
+        
+    sleep(sleeptime)
     
     return order, contract
 
@@ -675,6 +680,77 @@ def read_positions(subscribe, acctCode):
     
     app.run()
     
-    sleep(5)
+    sleep(sleeptime)
+    print ('Reading Portfolio')
     return update
+
+#PREPROCESSING
+#########################################################
+######################################################### 
+
+def cleaning_multiindex_dataframe(df, pernan_to_drop):
+    print ('Cleaning data')
+
+    subset = df.select_dtypes(exclude=[np.float, np.int])
+    col_len = len(subset.columns)
+
+    df = df.iloc[:,:-col_len]
+    df_cleaned = df.apply(pd.to_numeric, errors='coerce')
+    df_cleaned.replace([0,-1], np.nan, inplace=True)
+
+    total = df_cleaned.isna().sum().sort_values(ascending=False)
+    percent = (df_cleaned.isna().sum()/df_cleaned.isna().count()).sort_values(ascending=False)
+    nan_df_cleaned = pd.concat([total, percent], axis=1, keys=['Total', 'Percent'])
+
+    f, ax = plt.subplots(figsize=(20, 10))
+
+    for tick in ax.xaxis.get_major_ticks():
+        tick.label.set_fontsize(5)
+        plt.xticks(rotation='90')
+
+    sns.barplot(x=nan_df_cleaned.index, y=nan_df_cleaned['Percent'])
+    plt.xlabel('Features', fontsize=15)
+    plt.ylabel('Percent of nan values', fontsize=15)
+    plt.title('Percent nan data by feature dataset', fontsize=15)
+    plt.show()
+
+    features_to_drop = nan_df_cleaned[nan_df_cleaned['Percent']>pernan_to_drop].index
+    df_cleaned_dropna = df_cleaned.drop(features_to_drop, axis=1)
+
+
+    print ('The percentage of dataframe dropped columns is {}%.'.format(int(((df_cleaned.shape[1] - df_cleaned_dropna.shape[1])/df_cleaned.shape[1])*100)))
+
+    clean_df_fillna = df_cleaned_dropna.fillna(-1)
+
+    return clean_df_fillna
+
+def demean_multiindex(df):
+    
+    df_demean = df - df.mean(axis = 0, level = 0)
+
+    return df_demean
+
+def demean(df):
+    
+    df_demean = df.subtract(df.mean(axis=1), axis=0)
+
+    return df_demean
+    
+def normalize_multiindex(df):
+    
+    df_norm = (df - df.min(axis = 0, level = 0)) / (df.max(axis = 0, level = 0) - df.min(axis = 0, level = 0))
+
+    return df_norm
+
+def rank_multiindex(df, ascending=False):
+    
+    ranked = df.groupby(level=0).rank(ascending=ascending)
+
+    return ranked
+
+def zscore(df):
+    
+    dfz = (df - df.mean(axis = 0))/df.std(axis = 0,ddof=0) 
+    
+    return dfz    
     

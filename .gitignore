@@ -1,5 +1,5 @@
 __pycache__/
 .ipynb_checkpoints/
 .gitignore
-
+secret_key.txt
 

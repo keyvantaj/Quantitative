@@ -29,7 +29,7 @@ def Smooth(factor, window_length):
 def Returns(close,window_length):
     
     returns = close.apply(lambda x:(x - x.shift(window_length))/x).iloc[(window_length-1):,:].fillna(0)
-    
+
     return returns
 
 def overnight_sentiment(close, openn, window_length, trailing_window):
@@ -54,6 +54,7 @@ def direction(close, openn, window_length, trailing_window):
 
     p.replace([np.inf, -np.inf], np.nan, inplace=True)    
     rolling_p = p.rolling(trailing_window).sum()
+    
     direction_scaled = pd.DataFrame(data = preprocessing.scale(rolling_p),
                                                        index = rolling_p.index,
                                                        columns = rolling_p.columns)  
@@ -84,10 +85,7 @@ def sentiment(close, high, low, sent, trailing_window, universe):
                                index = final.index,
                                columns = final.columns).reindex(indexer)
     
-    sent_factor_scaled = sent_factor_scaled[universe]
-    assert len(sent_factor_scaled.columns) == len(close.columns)
-    
-    return sent_factor_scaled
+    return sent_factor_scaled[universe]
     
 def Fund_QReturn(multi_df,factor):
     

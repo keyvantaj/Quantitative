@@ -32,6 +32,15 @@ def Returns(close,window_length):
 
     return returns
 
+def volatility(close, window_length, trailing_window):
+    vol = close.pct_change().rolling(window_length).std(ddof=0).rolling(trailing_window).sum()
+    
+    vol_drz = pd.DataFrame(data = preprocessing.scale(vol),
+                                                   index = vol.index,
+                                                   columns = vol.columns) 
+    
+    return vol_drz
+
 def overnight_sentiment(close, openn, window_length, trailing_window):
     
     return_over = pd.DataFrame(index = close.index, columns=close.columns)
@@ -87,38 +96,16 @@ def sentiment(close, high, low, sent, trailing_window, universe):
     
     return sent_factor_scaled[universe]
     
-def Fund_QReturn(multi_df,factor):
+def sector_neutral(sectors:dict(), df):
     
-    factor_unstack = multi_df[factor].unstack('Symbol')
+    result = []
+    for sec in sectors.keys():
+        result.append(df[sectors[sec]].sub(df[sectors[sec]].mean(axis=1),axis=0))
     
-    plt.figure(figsize=(20,10))
-    plt.plot(factor_unstack)
-    plt.xticks(rotation=70)
-    plt.grid(True)
-    plt.legend(factor_unstack.columns)
-    plt.show()
-
-    factor_unstack_chge = ((factor_unstack - factor_unstack.shift(1))/factor_unstack.shift(1)).iloc[1:,:]
-    dates= {}
-
-    for tick in factor_unstack_chge.columns:
-        dates[tick] = []
-        for date in factor_unstack_chge.index:
-            if factor_unstack_chge.loc[date,tick]!=0:
-                dates[tick].append(date)
-                
-    for tick in factor_unstack_chge.columns:
-        i=0
-        for date in factor_unstack_chge.index:
-            try:
-                if date == dates[tick][i]:
-                    try:
-                        factor_unstack_chge.loc[slice(date,dates[tick][i+1] - pd.Timedelta(days=1)),tick] = factor_unstack_chge.loc[date,tick]
-                    except:
-                        factor_unstack_chge.loc[date:,tick] = factor_unstack_chge.loc[date,tick]
-                        continue
-                    i=i+1
-            except:
-                pass
+    df_neutralized = pd.concat(result,axis=1)    
+    df_neutralized_scaled = pd.DataFrame(data = preprocessing.scale(df_neutralized),
+                                                              index = df_neutralized.index,
+                                                              columns = df_neutralized.columns)
     
-    return factor_unstack_chge
+    return df_neutralized_scaled
+    

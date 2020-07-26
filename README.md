@@ -1,4 +1,4 @@
-<img src="quant.png">
+<img src="quant.jpg">
 
 
 # Quantitative Finance Project
@@ -95,9 +95,9 @@ Information and metadata for more than 14,000 US public companies.
 - Sentiment Analysis and News Analytics ([IFT/NSA](https://www.quandl.com/databases/NS1/data)) 
 News, blogs, social media and proprietary sources for thousands of stocks.
 
-**Features**
+#### Features
 
-### Tickers and Metadata [SHARADAR/TICKERS] features
+##### Tickers and Metadata [SHARADAR/TICKERS] features
 
 - <b>table</b> : Sharadar Table : The database table which the ticker is featured in. Examples are: "SF1" or "SEP. 
 - <b>permaticker</b> : Permanent Ticker Symbol : The permaticker is a unique and unchanging identifier for an issuer in the dataset which is issued by Sharadar. 
@@ -127,7 +127,7 @@ News, blogs, social media and proprietary sources for thousands of stocks.
 - <b>secfilings</b> : SEC Filings URL : The URL pointing to the SEC filings which also contains the Central Index Key (CIK). 
 - <b>companysite</b> : Company Website URL : The URL pointing to the company website. 
 
-### Core US Fundamentals [SHARADAR/SF1] features
+##### Core US Fundamentals [SHARADAR/SF1] features
 
 - <b>accoci</b> : Accumulated Other Comprehensive Income : [Balance Sheet] A component of [Equity] representing the accumulated change in equity from transactions and other events and circumstances from non-owner sources; net of tax effect; at period end. Includes foreign currency translation items; certain pension adjustments; unrealized gains and losses on certain investments in debt and equity securities. 
 - <b>assets</b> : Total Assets : [Balance Sheet] Sum of the carrying amounts as of the balance sheet date of all assets that are recognized. Major components are [CashnEq]; [Investments];[Intangibles]; [PPNENet];[TaxAssets] and [Receivables]. 
@@ -229,7 +229,7 @@ News, blogs, social media and proprietary sources for thousands of stocks.
 - <b>roe</b>: Return on Average Equity : [Metrics] Return on equity measures a corporation's profitability by calculating the amount of [NetIncCmn] returned as a percentage of [EquityAvg]. 
 - <b>roa</b> : Return on Average Assets : [Metrics] Return on assets measures how profitable a company is [NetIncCmn] relative to its total assets [AssetsAvg].
 
-### Sharadar Equity Prices [SHARADAR/SEP] features
+##### Sharadar Equity Prices [SHARADAR/SEP] features
 
 - <b>open</b> : Open Price - Split Adjusted : The opening share price, adjusted for stock splits and stock dividends. 
 - <b>high</b> : High Price - Split Adjusted : The high share price, adjusted for stock splits and stock dividends. 
@@ -237,7 +237,7 @@ News, blogs, social media and proprietary sources for thousands of stocks.
 - <b>close</b> : Close Price - Split Adjusted : The open share closing, adjusted for stock splits and stock dividends. 
 - <b>volume</b> : Volume - Split Adjusted : The traded volume, adjusted for stock splits and stock dividends.
 
-### Daily Metrics ([SHARADAR/DAILY] features
+##### Daily Metrics ([SHARADAR/DAILY] features
 
 - <b>ev</b> : Enterprise Value - Daily : Enterprise value is a measure of the value of a business as a whole; calculated as [MarketCap] plus [DebtUSD] minus [CashnEqUSD]. [MarketCap] is calculated by us, and the remaining figures are sourced from the most recent SEC form 10 filings. 
 - <b>evebit</b> : Enterprise Value over EBIT - Daily : Measures the ratio between [EV] and [EBITUSD]. EBITUSD is derived from the most recent SEC form 10 filings. 
@@ -247,9 +247,9 @@ News, blogs, social media and proprietary sources for thousands of stocks.
 - <b>pe</b> : Price Earnings (Damodaran Method) - Daily : Measures the ratio between [MarketCap] and [NetIncCmnUSD]. [NetIncCmnUSD] is sourced from the most recent SEC form 10 filings. 
 - <b>ps</b> : Price Sales (Damodaran Method) - Daily : Measures the ratio between [MarketCap] and [RevenueUSD]. [RevenueUSD] is sourced from the most recent SEC form 10 filings. 
 
-### Sentiment Analysis and News Analytics ([IFT/NSA] features
+##### Sentiment Analysis and News Analytics ([IFT/NSA] features
 
-- <b>sentiment Score</b>: a numeric measure of the bullishness / bearishness of news coverage of the stock.
+- <b>sentiment</b>: a numeric measure of the bullishness / bearishness of news coverage of the stock.
 - <b>sentiment_high</b>: highest intraday sentiment scores.
 - <b>sentiment_low</b>: lowest intraday sentiment scores.
 - <b>news_volume</b>: the absolute number of news articles covering the stock.
@@ -265,6 +265,10 @@ The factor analysis is performed using [alphalens](https://quantopian.github.io/
 -  <b>Mean quantile return</b> `alphalens.performance.mean_return_by_quantile`: Computes mean returns for factor quantiles across provided forward returns columns.
 - <b>Factor Rank Autocorrelation</b> `alphalens.performance.factor_rank_autocorrelation`: Computes autocorrelation of mean factor ranks in specified time spans. We must compare period to period factor ranks rather than factor values to account for systematic shifts in the factor values of all names or names within a group. This metric is useful for measuring the turnover of a factor. If the value of a factor for each name changes randomly from period to period, we’d expect an autocorrelation of 0.
 - <b>Sharpe ratio</b> `sharpe_ratio`: This function computes annualized sharpe ratio. This metric is used to understand the return of an investment compared to its risk. The ratio is the average return earned in excess per unit of volatility or total risk. Volatility is a measure of the factor return fluctuations of an asset.
+
+# Optimization
+
+
 
 
 

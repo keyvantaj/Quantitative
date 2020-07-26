@@ -2,3 +2,4 @@ __pycache__/
 .ipynb_checkpoints/
 secret_key.txt
 data/
+Stock_Basic_Statistics.ipynb

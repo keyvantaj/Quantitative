@@ -51,6 +51,7 @@ These instructions will get you a copy of the project up and running on your loc
 * [Zipfile](https://docs.python.org/3/library/zipfile.html) - The ZIP file format is a common archive and compression standard. This module provides tools to create, read, write, append, and list a ZIP file.
 * [Time](https://docs.python.org/3/library/time.html) - This module provides various time-related functions. 
 * [Yfinance](https://pypi.org/project/yfinance/) - Yahoo! Finance market data downloader
+* [cxpy](https://www.cvxpy.org/) - CVXPY is a Python-embedded modeling language for convex optimization problems. It allows you to express your problem in a natural way that follows the math, rather than in the restrictive standard form required by solvers.
 
 #### Local Modules
 
@@ -266,11 +267,31 @@ The factor analysis is performed using [alphalens](https://quantopian.github.io/
 - <b>Factor Rank Autocorrelation</b> `alphalens.performance.factor_rank_autocorrelation`: Computes autocorrelation of mean factor ranks in specified time spans. We must compare period to period factor ranks rather than factor values to account for systematic shifts in the factor values of all names or names within a group. This metric is useful for measuring the turnover of a factor. If the value of a factor for each name changes randomly from period to period, we’d expect an autocorrelation of 0.
 - <b>Sharpe ratio</b> `sharpe_ratio`: This function computes annualized sharpe ratio. This metric is used to understand the return of an investment compared to its risk. The ratio is the average return earned in excess per unit of volatility or total risk. Volatility is a measure of the factor return fluctuations of an asset.
 
+
+# The Combined Alpha Vector
+
+To get the single score for each stock we have to combine selected factors. This is an area where machine learning can be very helpful. In this context, the [feature_weights](https://github.com/keyvantaj/Quantitative/blob/master/feature_weights.py) module is implemented to gives us optimal weights to the selected alpha factors and result in the best combination.
+
+
 # Optimization
 
+Once alpha model and a risk model are generated, we want to find a portfolio that trades as close as possible to the alpha model but limiting risk as measured by the [risk_model](https://github.com/keyvantaj/Quantitative/blob/master/risk_model.py). The [cxpy](https://www.cvxpy.org/) package is used to implement the [optimizer](https://github.com/keyvantaj/Quantitative/blob/master/optimizer.py)
 
+The CVXPY objective function is to maximize $ \alpha^T * x \\ $, where $ x $ is the portfolio weights and $ \alpha $ is the alpha vector.
 
+In the other hand we have the following constraints:
 
+- $ r \leq risk_{\text{cap}}^2 \\ $
+- $ B^T * x \preceq factor_{\text{max}} \\ $
+- $ B^T * x \succeq factor_{\text{min}} \\ $
+- $ x^T\mathbb{1} = 0 \\ $
+- $ \|x\|_1 \leq 1 \\ $
+- $ x \succeq weights_{\text{min}} \\ $
+- $ x \preceq weights_{\text{max}} $
+
+Where $ x $ is the portfolio weights, $ B $ is the factor betas, and $ r $ is the portfolio risk calculated in [risk model](https://github.com/keyvantaj/Quantitative/blob/master/risk_model.py) module.
+
+The first constraint is that the predicted risk be less than some maximum limit. The second and third constraints are on the maximum and minimum portfolio factor exposures. The fourth constraint is the "market neutral constraint: the sum of the weights must be zero. The fifth constraint is the leverage constraint: the sum of the absolute value of the weights must be less than or equal to 1.0. The last are some minimum and maximum limits on individual holdings.
 
 
 

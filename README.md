@@ -277,19 +277,19 @@ To get the single score for each stock we have to combine selected factors. This
 
 Once alpha model and a risk model are generated, we want to find a portfolio that trades as close as possible to the alpha model but limiting risk as measured by the [risk_model](https://github.com/keyvantaj/Quantitative/blob/master/risk_model.py). The [cxpy](https://www.cvxpy.org/) package is used to implement the [optimizer](https://github.com/keyvantaj/Quantitative/blob/master/optimizer.py)
 
-The CVXPY objective function is to maximize $ \alpha^T * x \\ $, where $ x $ is the portfolio weights and $ \alpha $ is the alpha vector.
+The CVXPY objective function is to maximize 𝛼𝑇 ∗ 𝑥 , where x is the portfolio weights and alpha is the alpha vector.
 
 In the other hand we have the following constraints:
 
-- $ r \leq risk_{\text{cap}}^2 \\ $
-- $ B^T * x \preceq factor_{\text{max}} \\ $
-- $ B^T * x \succeq factor_{\text{min}} \\ $
-- $ x^T\mathbb{1} = 0 \\ $
-- $ \|x\|_1 \leq 1 \\ $
-- $ x \succeq weights_{\text{min}} \\ $
-- $ x \preceq weights_{\text{max}} $
+* 𝑟 ≤ 𝑟𝑖𝑠𝑘2cap
+* 𝐵𝑇 ∗ 𝑥 ⪯ 𝑓𝑎𝑐𝑡𝑜𝑟max
+* 𝐵𝑇 ∗ 𝑥 ⪰ 𝑓𝑎𝑐𝑡𝑜𝑟min
+* 𝑥𝑇𝟙 = 0
+* ‖𝑥‖ ≤ 1
+* 𝑥 ⪰ 𝑤𝑒𝑖𝑔ℎ𝑡𝑠min
+* 𝑥 ⪯ 𝑤𝑒𝑖𝑔ℎ𝑡𝑠max
 
-Where $ x $ is the portfolio weights, $ B $ is the factor betas, and $ r $ is the portfolio risk calculated in [risk model](https://github.com/keyvantaj/Quantitative/blob/master/risk_model.py) module.
+Where x is the portfolio weights, B is the factor betas, and r is the portfolio risk calculated in [risk model](https://github.com/keyvantaj/Quantitative/blob/master/risk_model.py) module.
 
 The first constraint is that the predicted risk be less than some maximum limit. The second and third constraints are on the maximum and minimum portfolio factor exposures. The fourth constraint is the "market neutral constraint: the sum of the weights must be zero. The fifth constraint is the leverage constraint: the sum of the absolute value of the weights must be less than or equal to 1.0. The last are some minimum and maximum limits on individual holdings.
 

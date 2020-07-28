@@ -257,7 +257,7 @@ News, blogs, social media and proprietary sources for thousands of stocks.
 - <b>news_buzz</b>: a numeric measure of the change in coverage volume for the stock.
 
 
-# Factor Analysis Target Variables
+## Factor Analysis Target Variables
 
 The factor analysis is performed using [alphalens](https://quantopian.github.io/alphalens/index.html) and [Pyfolio](https://quantopian.github.io/pyfolio/). These packages regrouped APIs useful for data processing and factor analysis over the pre-defined periods. These metrics are  mentioned here below:
 
@@ -268,12 +268,26 @@ The factor analysis is performed using [alphalens](https://quantopian.github.io/
 - <b>Sharpe ratio</b> `sharpe_ratio`: This function computes annualized sharpe ratio. This metric is used to understand the return of an investment compared to its risk. The ratio is the average return earned in excess per unit of volatility or total risk. Volatility is a measure of the factor return fluctuations of an asset.
 
 
-# The Combined Alpha Vector
+
+
+
+
+## The Combined Alpha Vector
 
 To get the single score for each stock we have to combine selected factors. This is an area where machine learning can be very helpful. In this context, the [feature_weights](https://github.com/keyvantaj/Quantitative/blob/master/feature_weights.py) module is implemented to gives us optimal weights to the selected alpha factors and result in the best combination.
 
 
-# Optimization
+## Risk Management
+
+We measured the predicted risk cap using [risk_model](https://github.com/keyvantaj/Quantitative/blob/master/risk_model.py) module. For this purpose the portfolio risk formula is √𝑋𝑇(𝐵𝐹𝐵𝑇+𝑆)𝑋 where:
+
+* 𝑋  is the portfolio weights
+* 𝐵  is the factor betas
+* 𝐹  is the factor covariance matrix
+* 𝑆  is the idiosyncratic variance matrix
+
+
+## Optimization
 
 Once alpha model and a risk model are generated, we want to find a portfolio that trades as close as possible to the alpha model but limiting risk as measured by the [risk_model](https://github.com/keyvantaj/Quantitative/blob/master/risk_model.py). The [cxpy](https://www.cvxpy.org/) package is used to implement the [optimizer](https://github.com/keyvantaj/Quantitative/blob/master/optimizer.py)
 

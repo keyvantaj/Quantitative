@@ -3,3 +3,5 @@ __pycache__/
 secret_key.txt
 data/
 Stock_Basic_Statistics.ipynb
+sa_alpha_research.ipynb
+account_ids.txt

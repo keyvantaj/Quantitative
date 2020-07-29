@@ -494,9 +494,9 @@ def commission_report(acctCode, time):
 
     app.run()
     sleep(sleeptime)
-    
+   
     df.set_index('time',inplace=True)
-    df.sort_values(by='time',inplace=True)
+    df.sort_index(inplace=True)
     df['RealizedPNL'][df['RealizedPNL']>1000000] = 'OPEN'
     
     return df

@@ -7,10 +7,11 @@ Keyvan Tajbakhsh
 July 26th, 2020
 
 This reasearch project is realized in Python language and edited in <i>Jupyter Notebook</i> environement. Before diving into it, please read carefully all requirements and instructions mentioned below. 
+
 For decades financial institutions and alpha generation platforms focus solely on quantitative investment research rather than the rapid trading of investments. While some of these platforms do allow analysts to take their strategies to market, 
 others focus solely on the research and development of these highly complex mathematical and statistical models. quantitative investing uses raw data to calculate potential stock values, earnings forecasts and other metrics that help investors make capital allocation decisions.<br>
-The purpose in this project is to define a liquid universe of stocks where we would apply the alpha factors to see through our factor analysis if there is a potential or not to send these results to production. 
-After selecting and combining factors using Machine Learning technics, the combined factor is analyzed and improved with an optimizer function and then integrated to the risk model.  
+The purpose of this project is to define a liquid universe of stocks where we would apply the alpha factors to see through our factor analysis if there is a potential or not to send these results to production. 
+After selecting and combining factors using Machine Learning technics, the combined factor is analyzed and improved with an optimizer function and then integrated into the risk model.  
 
 
 This project workflow is comprised of distinct stages including: 
@@ -266,10 +267,6 @@ The factor analysis is performed using [alphalens](https://quantopian.github.io/
 -  <b>Mean quantile return</b> `alphalens.performance.mean_return_by_quantile`: Computes mean returns for factor quantiles across provided forward returns columns.
 - <b>Factor Rank Autocorrelation</b> `alphalens.performance.factor_rank_autocorrelation`: Computes autocorrelation of mean factor ranks in specified time spans. We must compare period to period factor ranks rather than factor values to account for systematic shifts in the factor values of all names or names within a group. This metric is useful for measuring the turnover of a factor. If the value of a factor for each name changes randomly from period to period, we’d expect an autocorrelation of 0.
 - <b>Sharpe ratio</b> `sharpe_ratio`: This function computes annualized sharpe ratio. This metric is used to understand the return of an investment compared to its risk. The ratio is the average return earned in excess per unit of volatility or total risk. Volatility is a measure of the factor return fluctuations of an asset.
-
-
-
-
 
 
 ## The Combined Alpha Vector

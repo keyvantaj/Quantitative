@@ -13,11 +13,11 @@ import utils_s
 
 def Momentum(close,window_length):
     
-    momentum = close.apply(lambda x:(x - x.shift(window_length))/x).iloc[(window_length-1):,:].fillna(0)
+    momentum = log_Returns(close, window_length)
+    
     momentum_drz = pd.DataFrame(data = preprocessing.scale(momentum),
                                                            index = momentum.index,
                                                            columns = momentum.columns)
-    
     return momentum_drz
 
 def Smooth(factor, window_length):
@@ -27,11 +27,18 @@ def Smooth(factor, window_length):
     return smooth_factor
 
 def Returns(close,window_length):
-    
+
     returns = close.apply(lambda x:(x - x.shift(window_length))/x).iloc[(window_length-1):,:].fillna(0)
 
     return returns
 
+def log_Returns(close,window_length):
+
+    returns =  (np.log(close / close.shift(window_length)).iloc[(window_length-1):,:]).fillna(0)
+    
+    return returns
+    
+    
 def volatility(close, window_length, trailing_window):
     vol = close.pct_change().rolling(window_length).std(ddof=0).rolling(trailing_window).sum()
     

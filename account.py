@@ -230,7 +230,7 @@ def get_openorders():
 
         def __init__(self):
             EClient.__init__(self,self)
-            self.open_orders = pd.DataFrame(columns = ['action','executed_orders',
+            self.open_orders = pd.DataFrame(columns = ['action','open orders',
                                                        'type','algoStrategy',
                                                        'algoParams','status'])
 
@@ -258,10 +258,11 @@ def get_openorders():
 
     app.reqIds(-1)
     app.reqAllOpenOrders()
+    sleep(sleeptime)
+    
     open_orders = app.open_orders
 
     app.run()
-    sleep(sleeptime)
 
     return open_orders
 
@@ -307,6 +308,8 @@ def closing_positions(stock_to_close, portfolio, order_id):
                 order.algoParams.append(TagValue("adaptivePriority", 'Normal'))
 
                 app.placeOrder(orderId = order_id, contract = contract, order = order)
+                sleep(sleeptime)
+                
                 order_id = order_id + 1
                 print ('closing position for {} is: {} '.format(contract.symbol, order.totalQuantity))
 
@@ -319,6 +322,8 @@ def closing_positions(stock_to_close, portfolio, order_id):
                 order.algoParams.append(TagValue("adaptivePriority", 'Normal'))
 
                 app.placeOrder(orderId = order_id, contract = contract, order = order)
+                sleep(sleeptime)
+                
                 order_id = order_id + 1
                 print ('closing position for {} is: {} '.format(contract.symbol, order.totalQuantity))
                 
@@ -367,6 +372,8 @@ def rebalancing_to_leverage(action_balance, order_id):
                 order.algoParams = []
                 order.algoParams.append(TagValue("adaptivePriority", 'Normal'))
                 app.placeOrder(orderId = order_id, contract = contract, order = order)
+                sleep(sleeptime)
+                
                 order_id = order_id + 1
                 print (' buy order quantity placed for {} is: {} '.format(contract.symbol, order.totalQuantity))
 
@@ -377,6 +384,8 @@ def rebalancing_to_leverage(action_balance, order_id):
                 order.algoParams = []
                 order.algoParams.append(TagValue("adaptivePriority", 'Normal'))
                 app.placeOrder(orderId = order_id, contract = contract, order = order)
+                sleep(sleeptime)
+                
                 order_id = order_id + 1
                 print (' sell order quantity placed for {} is: {} '.format(contract.symbol, order.totalQuantity))
 
@@ -421,6 +430,7 @@ def placing_final_orders(action_final, order_id):
             order.algoParams.append(TagValue("adaptivePriority", 'Normal'))
 
             app.placeOrder(orderId = order_id, contract = contract, order = order)
+            sleep(sleeptime)
             order_id = order_id + 1
             print ('buy order quantity placed for {} is: {} '.format(contract.symbol, order.totalQuantity))
 
@@ -432,6 +442,7 @@ def placing_final_orders(action_final, order_id):
             order.algoParams.append(TagValue("adaptivePriority", 'Normal'))
 
             app.placeOrder(orderId = order_id, contract = contract, order = order)
+            sleep(sleeptime)
             order_id = order_id + 1
             print ('sell order quantity placed for {} is: {} '.format(contract.symbol, order.totalQuantity))
 
@@ -490,8 +501,9 @@ def commission_report(acctCode, time):
     execution_filter.time = time
 
     app.reqExecutions(0,execution_filter)
-    df = app.executed_orders
+    sleep(sleeptime)
 
+    df = app.executed_orders
     app.run()
     sleep(sleeptime)
 

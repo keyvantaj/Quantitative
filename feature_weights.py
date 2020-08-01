@@ -26,8 +26,6 @@ from sklearn.impute import SimpleImputer
 
 def feature_importance(n_fwd_days, close, all_factors):
     
-    n_fwd_days = n_fwd_days
-    
     pipe = all_factors
     pipe.index = pipe.index.set_levels([pd.to_datetime(pipe.index.levels[0]),pipe.index.levels[1]])
 
@@ -37,7 +35,7 @@ def feature_importance(n_fwd_days, close, all_factors):
     chunk_start = pipe.index.levels[0][0]
     chunk_end = pipe.index.levels[0][-1]
 
-    returns=factorize.Returns(close,1).loc[slice(chunk_start,chunk_end),:]
+    returns = factorize.Returns(close,1).loc[slice(chunk_start,chunk_end),:]
     returns_stacked = returns.stack().to_frame('Returns')
 
     results = pd.concat([pipe,returns_stacked],axis=1)

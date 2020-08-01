@@ -81,7 +81,7 @@ class OptimalHoldingsRegularization(OptimalHoldings):
     
     def __init__(self, lambda_reg=0.5, risk_cap=0.05, 
                  factor_max=10.0, factor_min=-10.0, 
-                 weights_max=0.5, weights_min=-0.5):
+                 weights_max=0.2, weights_min=-0.2):
             
         self.lambda_reg = lambda_reg
         self.risk_cap=risk_cap

@@ -35,24 +35,24 @@ These instructions will get you a copy of the project up and running on your loc
 
 #### Pypi Packages
 
-* [NumPy](https://www.numpy.org/) - A fundamental package for scientific computing with Python.
-* [Pandas](https://pandas.pydata.org/) - A library providing high-performance, easy-to-use data structures and data analysis tools.
-* [ScikitLearn](https://scikit-learn.org/) - Simple and efficient tools for data mining and data analysis.
-* [Matplotlib](https://matplotlib.org/) - Matplotlib is a Python 2D plotting library which produces publication quality figures in a variety of hardcopy formats and interactive environments across platforms.
-* [Sea Born](https://seaborn.pydata.org/) - Seaborn is a Python data visualization library based on matplotlib. It provides a high-level interface for drawing attractive and informative statistical graphics.
+* [NumPy](https://www.numpy.org/) - A fundamental package for scientific computing with Python.(<i>version == 1.19.1</i>)
+* [Pandas](https://pandas.pydata.org/) - A library providing high-performance, easy-to-use data structures and data analysis tools.(<i>version == 0.22.0</i>)
+* [ScikitLearn](https://scikit-learn.org/) - Simple and efficient tools for data mining and data analysis.(<i>version == 0.0</i>)
+* [Matplotlib](https://matplotlib.org/) - Matplotlib is a Python 2D plotting library which produces publication quality figures in a variety of hardcopy formats and interactive environments across platforms.(<i>version == 3.3.0</i>)
+* [Sea Born](https://seaborn.pydata.org/) - Seaborn is a Python data visualization library based on matplotlib. It provides a high-level interface for drawing attractive and informative statistical graphics.(<i>version == 0.10.1</i>)
 * [Quandl](https://www.quandl.com/) - Quandl delivers market data from hundreds of sources via API, or directly into Python, R, Excel and many other tools.
 * [Datetime](https://docs.python.org/3/library/datetime.html) - The datetime module supplies classes for manipulating dates and times.
 * [Pytz](https://pypi.org/project/pytz/) - World timezone definitions, modern and historical.
-* [Talib](https://mrjbq7.github.io/ta-lib/) - Talib is used by trading software developers requiring to perform technical analysis of financial market data.
-* [Alphalens](https://quantopian.github.io/alphalens/index.html) - Alphalens is a library for performance analysis of predictive (alpha) stock factor. 
-* [Pyfolio](https://quantopian.github.io/pyfolio/) - Pyfolio is a library for performance and risk analysis of financial portfolios developed by Quantopian Inc. 
+* [Talib](https://mrjbq7.github.io/ta-lib/) - Talib is used by trading software developers requiring to perform technical analysis of financial market data.(<i>version == 0.4.17</i>)
+* [Alphalens](https://quantopian.github.io/alphalens/index.html) - Alphalens is a library for performance analysis of predictive (alpha) stock factor.(<i>version == 0.3.6</i>)
+* [Pyfolio](https://quantopian.github.io/pyfolio/) - Pyfolio is a library for performance and risk analysis of financial portfolios developed by Quantopian Inc.(<i>version == latest github</i>)  
 * [Itertools](https://docs.python.org/3/library/itertools.html) - This module implements a number of iterator building blocks inspired by constructs from APL, Haskell, and SML. Each has been recast in a form suitable for Python.
 * [Warnings](https://docs.python.org/3/library/warnings.html) - Warning messages are typically issued in situations where it is useful to alert the user of some condition in a program.
 * [Os](https://docs.python.org/3/library/os.html) - This module provides a portable way of using operating system dependent functionality.
 * [Zipfile](https://docs.python.org/3/library/zipfile.html) - The ZIP file format is a common archive and compression standard. This module provides tools to create, read, write, append, and list a ZIP file.
 * [Time](https://docs.python.org/3/library/time.html) - This module provides various time-related functions. 
-* [Yfinance](https://pypi.org/project/yfinance/) - Yahoo! Finance market data downloader
-* [cxpy](https://www.cvxpy.org/) - CVXPY is a Python-embedded modeling language for convex optimization problems. It allows you to express your problem in a natural way that follows the math, rather than in the restrictive standard form required by solvers.
+* [Yfinance](https://pypi.org/project/yfinance/) - Yahoo! Finance market data downloader (<i>version == 0.1.54</i>)
+* [cvxpy](https://www.cvxpy.org/) - CVXPY is a Python-embedded modeling language for convex optimization problems. It allows you to express your problem in a natural way that follows the math, rather than in the restrictive standard form required by solvers.(<i>version == 1.0.11</i>)
 
 #### Local Modules
 

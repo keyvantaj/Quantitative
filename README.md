@@ -24,7 +24,7 @@ This project workflow is comprised of distinct stages including:
 6. Factors combination
 7. Risk analysis for equal weights
 8. Integrating factor data to the optimizer
-9. Optimized factor analysis
+9. Optimized alpha vector analysis 
 10. Predicted portfolio
 
 ## Getting Started
@@ -53,6 +53,7 @@ These instructions will get you a copy of the project up and running on your loc
 * [Time](https://docs.python.org/3/library/time.html) - This module provides various time-related functions. 
 * [Yfinance](https://pypi.org/project/yfinance/) - Yahoo! Finance market data downloader (<i>version == 0.1.54</i>)
 * [cvxpy](https://www.cvxpy.org/) - CVXPY is a Python-embedded modeling language for convex optimization problems. It allows you to express your problem in a natural way that follows the math, rather than in the restrictive standard form required by solvers.(<i>version == 1.0.11</i>)
+* [ibapi](https://interactivebrokers.github.io/tws-api/index.html) - The TWS API is a simple yet powerful interface through which IB clients can automate their trading strategies, request market data and monitor your account balance and portfolio in real time.(<i>version == 9.76.1</i>)
 
 #### Local Modules
 

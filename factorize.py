@@ -5,10 +5,6 @@ import numpy as np
 from datetime import datetime
 from sklearn import preprocessing
 # from sklearn.impute import SimpleImputer
-
-import utils_s
-
-
 # imp = SimpleImputer(missing_values=[np.nan, np.inf, -np.inf], strategy='most_frequent')
 
 def Momentum(close,window_length):

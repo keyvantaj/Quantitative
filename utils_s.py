@@ -51,33 +51,119 @@ def cleaning_dataframe(df, pernan_to_drop):
     
     return cleaned_df_all
 
-def demean_multiindex(df):
+def q_indexing(quantile_to_analyse, df):
     
-    df_demean = df - df.mean(axis = 0, level = 0)
+    try:
+        q_list = []
+        for i in quantile_to_analyse:
+            q_list.append((df['quantile'] == i))
 
-    return df_demean
+        df_merge = q_list[0]
+        for d in q_list[1:]:       
+            df_merge = df_merge ^ d
 
-def demean(df):
+        q_final_vector = df[df_merge]
+
+    except:
+
+        print ('no specific quantile selected')
+        q_final_vector = df
     
-    df_demean = df.subtract(df.mean(axis=1), axis=0)
+    return q_final_vector
 
-    return df_demean
-    
-def normalize_multiindex(df):
-    
-    df_norm = (df - df.min(axis = 0, level = 0)) / (df.max(axis = 0, level = 0) - df.min(axis = 0, level = 0))
 
-    return df_norm
-
-def rank_multiindex(df, ascending=False):
+def quantilize(qunatile_portions, df, weights_col, q_col, sec_col, sec_df):
     
-    ranked = df.groupby(level=0).rank(ascending=ascending)
+    quantile_optimal_stacked = pd.DataFrame(index = df.index, 
+                                            columns = [weights_col, q_col, sec_col])
+    qunatiles = np.linspace(0,1,qunatile_portions+1)
+    labels = [i+1 for i in range(len(qunatiles)-1)]
 
-    return ranked
+    for date in df.index.levels[0]:
 
-def zscore(df):
+        x = df[weights_col].loc[date.date(),:]
+
+        quantile_optimal_stacked.loc[date,q_col] = pd.qcut(x, qunatiles, 
+                                                                labels = labels)
+
+    quantile_optimal_stacked.loc[:,weights_col] = df[weights_col]
+    quantile_optimal_stacked.loc[:,sec_col] = sec_df[sec_col]
     
-    dfz = (df - df.mean(axis = 0))/df.std(axis = 0,ddof=0) 
+    return quantile_optimal_stacked
+
+def select_sector(df, drop_long_sec, drop_short_sec, sec_col, factor_col):
     
-    return dfz    
+    try:
+        drop_rows_list = []
+        for i in drop_long_sec:
+            drop_rows_list.append((df.sector == i) & (df[factor_col] == labels[-1]))
+
+        for i in drop_short_sec:
+            drop_rows_list.append((df.sector == i) & (df[factor_col] == labels[0]))
+
+        if len(drop_rows_list) == 1:
+            df_merge = drop_rows_list[0]
+        else:
+            df_merge = drop_rows_list[0]
+
+            for d in drop_rows_list[1:]:       
+                df_merge = df_merge ^ d
+
+        final_vector = df[~df_merge]
+        sectors = final_vector[sec_col]
+
+    except:
+        final_vector = df
+        sectors = final_vector[sec_col]
+    
+    return  final_vector,sectors
+
+def rebalancing_to_leverage(df, percent_long_leverage_target,percent_short_leverage_target):
+    
+    try:
+        for date in df.index.levels[0]:
+
+            long_balance = np.abs(df.loc[date,'optimal_weights'][df.loc[date,'optimal_weights']>0].sum())
+            short_balance = np.abs(df.loc[date,'optimal_weights'][df.loc[date,'optimal_weights']<0].sum())
+
+            long_ratio = percent_long_leverage_target / long_balance
+            short_ratio = percent_short_leverage_target / short_balance
+
+            df.loc[date,'optimal_weights'][df.loc[date,'optimal_weights']>0] = df.loc[date,'optimal_weights'][df.loc[date,'optimal_weights']>0] * long_ratio
+            df.loc[date,'optimal_weights'][df.loc[date,'optimal_weights']<0] = df.loc[date,'optimal_weights'][df.loc[date,'optimal_weights']<0] * short_ratio
+
+    except:
+
+        pass
+    return df
+
+# def demean_multiindex(df):
+    
+#     df_demean = df - df.mean(axis = 0, level = 0)
+
+#     return df_demean
+
+# def demean(df):
+    
+#     df_demean = df.subtract(df.mean(axis=1), axis=0)
+
+#     return df_demean
+    
+# def normalize_multiindex(df):
+    
+#     df_norm = (df - df.min(axis = 0, level = 0)) / (df.max(axis = 0, level = 0) - df.min(axis = 0, level = 0))
+
+#     return df_norm
+
+# def rank_multiindex(df, ascending=False):
+    
+#     ranked = df.groupby(level=0).rank(ascending=ascending)
+
+#     return ranked
+
+# def zscore(df):
+    
+#     dfz = (df - df.mean(axis = 0))/df.std(axis = 0,ddof=0) 
+    
+#     return dfz    
     

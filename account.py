@@ -18,10 +18,7 @@ from datetime import datetime
 from time import sleep, strftime, localtime,time 
 
 sleeptime = 2
-
-#ORDERS
-#########################################################
-#########################################################   
+ 
 
 def read_nextvalidid(reqId):
 

@@ -83,7 +83,7 @@ def feature_importance(n_fwd_days, close, all_factors):
     X = X.swapaxes(2, 0).swapaxes(0, 1) # (factors, time, stocks) -> (time, stocks, factors)
 
     # Train-test split
-    train_size_perc = 0.8
+    train_size_perc = 0.7
     n_time, n_stocks, n_factors = X.shape
     train_size = np.int16(np.round(train_size_perc * n_time))
     X_train, Y_train = X[:train_size], Y[:train_size]

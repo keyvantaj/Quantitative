@@ -24,7 +24,43 @@ import os
 from sklearn import linear_model, decomposition, ensemble, preprocessing, isotonic, metrics
 from sklearn.impute import SimpleImputer
 
-def feature_importance(n_fwd_days, close, all_factors):
+
+def shift_mask_data(X, Y, upper_percentile, lower_percentile, n_fwd_days=1):
+    # Shift X to match factors at t to returns at t+n_fwd_days (we want to predict future returns after all)
+    shifted_X = np.roll(X, n_fwd_days+1, axis=0)
+
+    # Slice off rolled elements
+    X = shifted_X[n_fwd_days+1:]
+    Y = Y[n_fwd_days+1:]
+
+    n_time, n_stocks, n_factors = X.shape
+
+    # Look for biggest up and down movers
+    upper = np.nanpercentile(Y, upper_percentile, axis=1)[:, np.newaxis]
+    lower = np.nanpercentile(Y, lower_percentile, axis=1)[:, np.newaxis]
+
+    upper_mask = (Y >= upper)
+    lower_mask = (Y <= lower)
+
+    mask = upper_mask | lower_mask # This also drops nans
+    mask = mask.flatten()
+
+    # Only try to predict whether a stock moved up/down relative to other stocks
+    Y_binary = np.zeros(n_time * n_stocks)
+    Y_binary[upper_mask.flatten()] = 1
+    Y_binary[lower_mask.flatten()] = -1
+
+    # Flatten X
+    X = X.reshape((n_time * n_stocks, n_factors))
+
+    # Drop stocks that did not move much (i.e. are in the 30th to 70th percentile)
+    X = X[mask]
+    Y_binary = Y_binary[mask]
+
+    return X, Y_binary
+
+def feature_importance(n_fwd_days, close, all_factors, 
+                       upper_percentile, lower_percentile):
     
     pipe = all_factors
     pipe.index = pipe.index.set_levels([pd.to_datetime(pipe.index.levels[0]),pipe.index.levels[1]])
@@ -40,40 +76,6 @@ def feature_importance(n_fwd_days, close, all_factors):
 
     results = pd.concat([pipe,returns_stacked],axis=1)
     results.index.set_names(['date','asset'],inplace=True)
-
-    def shift_mask_data(X, Y, upper_percentile=70, lower_percentile=30, n_fwd_days=1):
-        # Shift X to match factors at t to returns at t+n_fwd_days (we want to predict future returns after all)
-        shifted_X = np.roll(X, n_fwd_days+1, axis=0)
-
-        # Slice off rolled elements
-        X = shifted_X[n_fwd_days+1:]
-        Y = Y[n_fwd_days+1:]
-
-        n_time, n_stocks, n_factors = X.shape
-
-        # Look for biggest up and down movers
-        upper = np.nanpercentile(Y, upper_percentile, axis=1)[:, np.newaxis]
-        lower = np.nanpercentile(Y, lower_percentile, axis=1)[:, np.newaxis]
-
-        upper_mask = (Y >= upper)
-        lower_mask = (Y <= lower)
-
-        mask = upper_mask | lower_mask # This also drops nans
-        mask = mask.flatten()
-
-        # Only try to predict whether a stock moved up/down relative to other stocks
-        Y_binary = np.zeros(n_time * n_stocks)
-        Y_binary[upper_mask.flatten()] = 1
-        Y_binary[lower_mask.flatten()] = -1
-
-        # Flatten X
-        X = X.reshape((n_time * n_stocks, n_factors))
-
-        # Drop stocks that did not move much (i.e. are in the 30th to 70th percentile)
-        X = X[mask]
-        Y_binary = Y_binary[mask]
-
-        return X, Y_binary
 
     results_wo_returns = results.copy()
     returns = results_wo_returns.pop('Returns')
@@ -91,8 +93,8 @@ def feature_importance(n_fwd_days, close, all_factors):
 
     X_train_shift, Y_train_shift = shift_mask_data(X_train, Y_train, n_fwd_days=n_fwd_days)
     X_test_shift, Y_test_shift = shift_mask_data(X_test, Y_test, n_fwd_days=n_fwd_days, 
-                                                 lower_percentile=50, 
-                                                 upper_percentile=50)
+                                                 lower_percentile=lower_percentile, 
+                                                 upper_percentile=upper_percentile)
 
 
     start_timer = time()

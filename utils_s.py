@@ -135,35 +135,5 @@ def rebalancing_to_leverage(df, percent_long_leverage_target,percent_short_lever
     except:
 
         pass
-    return df
-
-# def demean_multiindex(df):
-    
-#     df_demean = df - df.mean(axis = 0, level = 0)
-
-#     return df_demean
-
-# def demean(df):
-    
-#     df_demean = df.subtract(df.mean(axis=1), axis=0)
-
-#     return df_demean
-    
-# def normalize_multiindex(df):
-    
-#     df_norm = (df - df.min(axis = 0, level = 0)) / (df.max(axis = 0, level = 0) - df.min(axis = 0, level = 0))
-
-#     return df_norm
-
-# def rank_multiindex(df, ascending=False):
-    
-#     ranked = df.groupby(level=0).rank(ascending=ascending)
-
-#     return ranked
-
-# def zscore(df):
-    
-#     dfz = (df - df.mean(axis = 0))/df.std(axis = 0,ddof=0) 
-    
-#     return dfz    
+    return df  
     

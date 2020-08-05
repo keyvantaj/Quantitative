@@ -475,7 +475,6 @@ def commission_report(acctCode, time):
                                                             pd.to_datetime(execution.time),
                                                             execution.shares,execution.side,execution.price,
                                                             execution.shares*execution.price]
-            print (contract.symbol)
             self.val = self.val + 1
             
         def commissionReport(self, commissionReport):

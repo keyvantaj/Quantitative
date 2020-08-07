@@ -91,7 +91,10 @@ def feature_importance(n_fwd_days, close, all_factors,
     X_train, Y_train = X[:train_size], Y[:train_size]
     X_test, Y_test = X[(train_size+n_fwd_days):], Y[(train_size+n_fwd_days):]
 
-    X_train_shift, Y_train_shift = shift_mask_data(X_train, Y_train, n_fwd_days=n_fwd_days)
+    X_train_shift, Y_train_shift = shift_mask_data(X_train, Y_train, n_fwd_days=n_fwd_days,
+                                                   lower_percentile=lower_percentile,
+                                                   upper_percentile=upper_percentile)
+    
     X_test_shift, Y_test_shift = shift_mask_data(X_test, Y_test, n_fwd_days=n_fwd_days, 
                                                  lower_percentile=lower_percentile, 
                                                  upper_percentile=upper_percentile)

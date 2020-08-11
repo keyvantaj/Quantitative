@@ -4,6 +4,9 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from sklearn import preprocessing
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+from statsmodels.regression.rolling import RollingOLS
 # from sklearn.impute import SimpleImputer
 # imp = SimpleImputer(missing_values=[np.nan, np.inf, -np.inf], strategy='most_frequent')
 
@@ -111,4 +114,29 @@ def sector_neutral(sectors:dict(), df):
                                                               columns = df_neutralized.columns)
     
     return df_neutralized_scaled
+
+
+def capm(close,market,window_length_return, window_length_beta):
+    
+    r_market = log_Returns(market,window_length_return).loc[slice(close.index[0],close.index[-1])]
+    
+    exog = sm.add_constant(r_market)
+    
+    cap_beta = pd.DataFrame(columns=close.columns)
+    
+    for tick in close.columns:
+        r_assets = log_Returns(close[[tick]], window_length_return)
+            
+        endog = r_assets
+        rols = RollingOLS(endog, exog, window = window_length_beta)
+        rres = rols.fit()
+        capm = rres.params.dropna()
+        capm.columns = ['intercept', 'beta']
+        cap_beta.loc[:,tick] = capm['beta']
+    
+    return cap_beta
+
+
+
+
     

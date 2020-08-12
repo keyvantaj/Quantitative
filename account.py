@@ -18,7 +18,6 @@ from datetime import datetime
 from time import sleep, strftime, localtime,time 
 
 sleeptime = 2
- 
 
 def read_nextvalidid(reqId):
 
@@ -127,10 +126,6 @@ def read_positions(subscribe, acctCode):
     print ('Reading Portfolio')
     rows = update[update['Position']==0].index
     update.drop(rows,axis=0,inplace =True)
-#     update.loc['Total',:] = update.sum()           
-#     idx = update.index.tolist()
-#     idx.pop(idx.index('Total'))
-#    ani = update.reindex(idx+['Total'])
 
     return update
 
@@ -264,7 +259,7 @@ def get_openorders():
     return open_orders
 
 
-def closing_positions(stock_to_close, portfolio, order_id):
+def closing_positions(stock_to_close, portfolio, order_id, ordersPriority):
     
     class TestApp(EWrapper, EClient):
 
@@ -302,7 +297,7 @@ def closing_positions(stock_to_close, portfolio, order_id):
                 #order.cashQty = weigth * 1.5 * net_liq
                 order.algoStrategy = 'Adaptive'
                 order.algoParams = []
-                order.algoParams.append(TagValue("adaptivePriority", 'Normal'))
+                order.algoParams.append(TagValue("adaptivePriority", ordersPriority))
 
                 app.placeOrder(orderId = order_id, contract = contract, order = order)
                 sleep(sleeptime)
@@ -316,7 +311,7 @@ def closing_positions(stock_to_close, portfolio, order_id):
                 #order.cashQty = weigth * 1.5 * net_liq
                 order.algoStrategy = 'Adaptive'
                 order.algoParams = []
-                order.algoParams.append(TagValue("adaptivePriority", 'Normal'))
+                order.algoParams.append(TagValue("adaptivePriority", ordersPriority))
 
                 app.placeOrder(orderId = order_id, contract = contract, order = order)
                 sleep(sleeptime)
@@ -331,7 +326,7 @@ def closing_positions(stock_to_close, portfolio, order_id):
     app.disconnect()        
     return order_id+1
         
-def rebalancing_to_leverage(action_balance, order_id):
+def rebalancing_to_leverage(action_balance, order_id, ordersPriority):
     
     class TestApp(EWrapper, EClient):
 
@@ -367,7 +362,7 @@ def rebalancing_to_leverage(action_balance, order_id):
                 order.action = 'BUY'
                 order.algoStrategy = 'Adaptive'
                 order.algoParams = []
-                order.algoParams.append(TagValue("adaptivePriority", 'Normal'))
+                order.algoParams.append(TagValue("adaptivePriority", ordersPriority))
                 app.placeOrder(orderId = order_id, contract = contract, order = order)
                 sleep(sleeptime)
                 
@@ -379,7 +374,7 @@ def rebalancing_to_leverage(action_balance, order_id):
                 order.action = 'SELL'
                 order.algoStrategy = 'Adaptive'
                 order.algoParams = []
-                order.algoParams.append(TagValue("adaptivePriority", 'Normal'))
+                order.algoParams.append(TagValue("adaptivePriority", ordersPriority))
                 app.placeOrder(orderId = order_id, contract = contract, order = order)
                 sleep(sleeptime)
                 
@@ -391,7 +386,7 @@ def rebalancing_to_leverage(action_balance, order_id):
     app.disconnect()        
         
         
-def placing_final_orders(action_final, order_id):        
+def placing_final_orders(action_final, order_id, ordersPriority):        
 
     class TestApp(EWrapper, EClient):
 
@@ -424,7 +419,7 @@ def placing_final_orders(action_final, order_id):
             order.action = 'BUY'
             order.algoStrategy = 'Adaptive'
             order.algoParams = []
-            order.algoParams.append(TagValue("adaptivePriority", 'Normal'))
+            order.algoParams.append(TagValue("adaptivePriority", ordersPriority))
 
             app.placeOrder(orderId = order_id, contract = contract, order = order)
             sleep(sleeptime)
@@ -436,7 +431,7 @@ def placing_final_orders(action_final, order_id):
             order.action = 'SELL'
             order.algoStrategy = 'Adaptive'
             order.algoParams = []
-            order.algoParams.append(TagValue("adaptivePriority", 'Normal'))
+            order.algoParams.append(TagValue("adaptivePriority", ordersPriority))
 
             app.placeOrder(orderId = order_id, contract = contract, order = order)
             sleep(sleeptime)

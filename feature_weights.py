@@ -105,7 +105,7 @@ def feature_importance(n_fwd_days, close, all_factors,
     # Train classifier
     imputer = SimpleImputer()
     scaler = preprocessing.MinMaxScaler()
-    clf = ensemble.AdaBoostClassifier(n_estimators=150) # n_estimators controls how many weak classifiers are fi
+    clf = ensemble.AdaBoostClassifier(n_estimators=150) 
 
     X_train_trans = imputer.fit_transform(X_train_shift)
     X_train_trans = scaler.fit_transform(X_train_trans)

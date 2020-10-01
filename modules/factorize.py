@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import numpy as np
+import talib
 from datetime import datetime
 from sklearn import preprocessing
 import statsmodels.api as sm
@@ -81,7 +82,20 @@ class FactorManagement():
                                                            columns = rolling_p.columns)  
 
         return direction_scaled
+    
+    def sma(self, close, window_length):
+        
+        df= pd.DataFrame(index = close.index)
 
+        try:
+            for tick in close.columns:
+                df[tick] = talib.SMA(close[tick].values, timeperiod=window_length)
+        except:
+            pass
+
+        sma_min = ((close - df)/df) * -1
+        return sma_min
+    
     def sentiment(self, close, high, low, sent, trailing_window, universe):
 
         indexer = close.index
@@ -139,7 +153,7 @@ class FactorManagement():
             capm = rres.params.dropna()
             capm.columns = ['intercept', 'beta']
             cap_beta.loc[:,tick] = capm['beta']
-
+            
         return cap_beta
 
     

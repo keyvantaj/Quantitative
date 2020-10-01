@@ -142,7 +142,29 @@ class FactorManagement():
 
         return cap_beta
 
-
-
-
     
+    def channels(self, close, window_length):
+
+        df_ch = pd.DataFrame(index = close.index, columns = close.columns)
+
+        sl = len(close.index)//window_length 
+
+        for tick in close.columns:
+
+            for i in range(0,len(close.index),window_length): 
+
+                j= i + window_length
+
+                if i == 0:
+                    distance = max(close[tick].iloc[-j:]) - min(close[tick].iloc[-j:])
+                    df_ch[tick].iloc[-j:] = (close[tick].iloc[-j:] - min(close[tick].iloc[-j:])) / distance
+
+                elif i == sl*window_length:
+                    distance = max(close[tick].iloc[:-i]) - min(close[tick].iloc[:-i])
+                    df_ch[tick].iloc[:-i] = (close[tick].iloc[:-i] - min(close[tick].iloc[:-i])) / distance
+
+                else:
+                    distance = max(close[tick].iloc[-j:-i]) - min(close[tick].iloc[-j:-i])
+                    df_ch[tick].iloc[-j:-i] = (close[tick].iloc[-j:-i] - min(close[tick].iloc[-j:-i])) / distance
+
+        return df_ch*-1    

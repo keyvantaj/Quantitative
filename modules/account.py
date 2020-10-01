@@ -177,12 +177,17 @@ class AccountManagement:
                 EClient.__init__(self,self)
                 self.open_orders = pd.DataFrame(columns = ['action','quantity',
                                                            'type','algoStrategy',
-                                                           'algoParams','pre_status','status'])
+                                                           'algoParams','pre_status'])
 
             def error(self, reqId:TickerId, errorCode:int, errorString:str):
                 if reqId > -1:
                     print("Error. Id: " , reqId, " Code: " , errorCode , " Msg: " , errorString)
 
+            def cancelOrder(self,orderId):
+                super().cancelOrder(orderId)
+                print('cancel order ended')
+                
+                
             def openOrder(self, orderId, Contract, Order, OrderState):
                 super().openOrder(orderId, Contract, Order, OrderState)
 
@@ -191,32 +196,27 @@ class AccountManagement:
                                                            Order.orderType,
                                                            Order.algoStrategy,
                                                            Order.algoParams[0],
-                                                           OrderState.status,'canceled']
-
-            def cancelOrder(self,orderId):
-                super().cancelOrder(orderId)
-                print('cancel order ended')
-                #self.disconnect()
+                                                           OrderState.status]
 
             def openOrderEnd(self):
                 super().openOrderEnd()
                 print('open order ended')
                 self.disconnect()
 
+
         app = TestApp()
         app.connect('127.0.0.1', 7497, 0)
-
-        #app.reqIds(-1)
+        
+        app.reqIds(-1)
         app.reqAllOpenOrders()
+
         open_orders = app.open_orders
-
         app.reqGlobalCancel()
-
+        
         app.run()
         sleep(sleeptime)
-
+        
         return open_orders
-
 
     def get_openorders():
 
@@ -261,7 +261,7 @@ class AccountManagement:
         return open_orders
 
 
-    def closing_positions(stock_to_close, portfolio, order_id, ordersPriority):
+    def closing_positions(stock_to_close, portfolio, order_id, ordersPriority, transmit):
 
         class TestApp(EWrapper, EClient):
 
@@ -292,6 +292,7 @@ class AccountManagement:
                 order = Order()
                 order.orderType = 'MKT'
                 order.totalQuantity = int(np.abs(portfolio.loc[i,'Position']))
+                order.transmit = transmit
 
                 if portfolio.loc[i,'Position'] > 0:
 
@@ -328,7 +329,7 @@ class AccountManagement:
         app.disconnect()        
         return order_id+1
 
-    def rebalancing_to_leverage(action_balance, order_id, ordersPriority):
+    def rebalancing_to_leverage(action_balance, order_id, ordersPriority,transmit):
 
         class TestApp(EWrapper, EClient):
 
@@ -358,6 +359,7 @@ class AccountManagement:
                 order = Order()
                 order.orderType = 'MKT'
                 order.totalQuantity = np.abs(action_balance.loc[i,'shares'])
+                order.transmit = transmit
 
                 if action_balance.loc[i,'shares'] > 0:
 
@@ -388,7 +390,7 @@ class AccountManagement:
         app.disconnect()        
 
 
-    def placing_final_orders(action_final, order_id, ordersPriority):        
+    def placing_final_orders(action_final, order_id, ordersPriority,transmit):        
 
         class TestApp(EWrapper, EClient):
 
@@ -413,6 +415,7 @@ class AccountManagement:
 
             order = Order()
             order.orderType = 'MKT'
+            order.transmit = transmit
 
             order.totalQuantity = np.abs(action_final.loc[ticker])[0]
 

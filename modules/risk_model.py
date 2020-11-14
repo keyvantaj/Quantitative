@@ -8,56 +8,63 @@ from abc import ABC, abstractmethod
 import scipy.stats as stats
 import cvxpy as cvx
 
-class RiskManagement():
-    
+
+class RiskManagement:
+
     def __init__(self):
-        
+
         pass
 
-    def fit_pca(self, close, num_factor_exposures, svd_solver):
+    @staticmethod
+    def fit_pca(close, num_factor_exposures, svd_solver):
 
-        returns  = close.apply(lambda x:(x - x.shift(1))/x).iloc[1:,:].fillna(0)
+        returns = close.apply(lambda x: (x - x.shift(1)) / x).iloc[1:, :].fillna(0)
         pca = PCA(n_components=num_factor_exposures, svd_solver=svd_solver)
         pca.fit(returns)
 
-        return pca  
+        return pca
 
-    def factor_betas(self, pca, returns):
+    @staticmethod
+    def factor_betas(pca, returns):
 
         factor_beta_columns = pca.components_.shape[0]
         factor_betas = pd.DataFrame(pca.components_.T, returns.columns.values, np.arange(factor_beta_columns))
         return factor_betas
 
-    def factor_returns(self, pca, returns, factor_return_indices, factor_return_columns):
+    @staticmethod
+    def factor_returns(pca, returns, factor_return_indices, factor_return_columns):
 
-
-        factor_returns =pd.DataFrame(pca.transform(returns), factor_return_indices, factor_return_columns)
+        factor_returns = pd.DataFrame(pca.transform(returns), factor_return_indices, factor_return_columns)
         return factor_returns
 
-    def factor_cov_matrix(self, factor_returns, ann_factor):
+    @staticmethod
+    def factor_cov_matrix(factor_returns, ann_factor):
 
-        annualized_factor_covariance_matrix = np.diag(factor_returns.var(axis=0, ddof=1)*ann_factor)
+        annualized_factor_covariance_matrix = np.diag(factor_returns.var(axis=0, ddof=1) * ann_factor)
 
         return annualized_factor_covariance_matrix
 
-    def idiosyncratic_var_matrix(self, returns, factor_returns, factor_betas, ann_factor):
+    @staticmethod
+    def idiosyncratic_var_matrix(returns, factor_returns, factor_betas, ann_factor):
 
         common_returns_ = pd.DataFrame(np.dot(factor_returns, factor_betas.T), returns.index, returns.columns)
 
         residuals_ = (returns - common_returns_)
-        specific_risk_matrix = pd.DataFrame(np.diag(np.var(residuals_))*ann_factor, returns.columns, returns.columns)
+        specific_risk_matrix = pd.DataFrame(np.diag(np.var(residuals_)) * ann_factor, returns.columns, returns.columns)
         return specific_risk_matrix
 
-    def idiosyncratic_var_vector(self, returns, idiosyncratic_var_matrix):
+    @staticmethod
+    def idiosyncratic_var_vector(returns, idiosyncratic_var_matrix):
 
-        idiosyncratic_var_vector = pd.DataFrame(np.diag(idiosyncratic_var_matrix),index=returns.columns)   
+        idiosyncratic_var_vector = pd.DataFrame(np.diag(idiosyncratic_var_matrix), index=returns.columns)
         return idiosyncratic_var_vector
 
-    def predict_portfolio_risk(self, factor_betas, factor_cov_matrix, idiosyncratic_var_matrix, weights):
+    @staticmethod
+    def predict_portfolio_risk(factor_betas, factor_cov_matrix, idiosyncratic_var_matrix, weights):
 
         K = factor_betas.dot(factor_cov_matrix).dot(factor_betas.T) + idiosyncratic_var_matrix
 
-        predicted_portfolio_risk = np.sqrt(weights.T.dot(K).dot(weights))    
+        predicted_portfolio_risk = np.sqrt(weights.T.dot(K).dot(weights))
 
         return predicted_portfolio_risk.values[0][0]
 
@@ -68,59 +75,53 @@ class RiskManagement():
         except:
             pass
 
-        returns  = close.apply(lambda x:(x - x.shift(1))/x).iloc[1:,:].fillna(0)
+        returns = close.apply(lambda x: (x - x.shift(1)) / x).iloc[1:, :].fillna(0)
 
-        pca = self.fit_pca(close=close,num_factor_exposures=num_factor_exposures,svd_solver='full')
+        pca = self.fit_pca(close=close, num_factor_exposures=num_factor_exposures, svd_solver='full')
 
         plt.title('Explained Variance')
-        plt.bar(np.arange(num_factor_exposures), pca.explained_variance_ratio_);
+        plt.bar(np.arange(num_factor_exposures), pca.explained_variance_ratio_)
         plt.grid(alpha=0.5)
 
-        Risk_Model = {}
-        Risk_Model['factor_betas'] = self.factor_betas(pca, returns)
+        Risk_Model = {'factor_betas': self.factor_betas(pca, returns), 'factor_returns': self.factor_returns(
+            pca,
+            returns,
+            returns.index,
+            np.arange(num_factor_exposures))}
 
-
-        Risk_Model['factor_returns'] = self.factor_returns(
-        pca,
-        returns,
-        returns.index,
-        np.arange(num_factor_exposures))
-
-        Risk_Model['factor_returns'].cumsum().plot(legend=None);
+        Risk_Model['factor_returns'].cumsum().plot(legend=None)
         plt.grid(alpha=0.5)
 
         ann_factor = 252
         Risk_Model['factor_cov_matrix'] = self.factor_cov_matrix(Risk_Model['factor_returns'], ann_factor)
 
-        Risk_Model['idiosyncratic_var_matrix'] = self.idiosyncratic_var_matrix(returns, Risk_Model['factor_returns'], Risk_Model['factor_betas'], ann_factor)
+        Risk_Model['idiosyncratic_var_matrix'] = self.idiosyncratic_var_matrix(returns, Risk_Model['factor_returns'],
+                                                                               Risk_Model['factor_betas'], ann_factor)
 
-        Risk_Model['idiosyncratic_var_vector'] = self.idiosyncratic_var_vector(returns, Risk_Model['idiosyncratic_var_matrix'])
+        Risk_Model['idiosyncratic_var_vector'] = self.idiosyncratic_var_vector(returns,
+                                                                               Risk_Model['idiosyncratic_var_matrix'])
 
         predicted_portfolio_risk = self.predict_portfolio_risk(
             Risk_Model['factor_betas'],
             Risk_Model['factor_cov_matrix'],
             Risk_Model['idiosyncratic_var_matrix'],
-            weights)    
+            weights)
 
-        return predicted_portfolio_risk,Risk_Model 
+        return predicted_portfolio_risk, Risk_Model
 
-
+    @staticmethod
     def portfolio_calculation(portfolio):
 
-        long = portfolio[portfolio['Position']>0]
-        short = portfolio[portfolio['Position']<0]
+        long = portfolio[portfolio['Position'] > 0]
+        short = portfolio[portfolio['Position'] < 0]
         long_value = long['marketValue'].sum()
         short_value = short['marketValue'].sum()
-        grv = long_value + (short_value*-1)
+        grv = long_value + (short_value * -1)
 
         weights = []
         for tick in portfolio.index:
-            weights.append(np.round(portfolio.loc[tick,'marketValue']/grv,4))
+            weights.append(np.round(portfolio.loc[tick, 'marketValue'] / grv, 4))
 
         all_weights = pd.DataFrame(weights, portfolio.index, columns=['weights'])
 
         return all_weights, long, short, grv
-       
-        
-        
-        
